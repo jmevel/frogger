@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frogger</title>
+    <link type="text/css" rel="stylesheet" href="MetroUiCss/css/modern.css" />
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+
+        var
+                errorSpanPseudo,
+                errorSpanPassword,
+                errorSpanRepeatPassword,
+                inputPseudo,
+                inputMessage,
+                submitButton,
+                players,
+                source,
+                socket,
+
+                onPseudoChange = function () {
+                    if (inputPseudo.value == ""){
+                        inputPassword.disabled = true;
+                        inputRepeatPassword.disabled = true;
+                    }
+                    else{
+                        inputPassword.disabled = false;
+                        inputRepeatPassword.disabled = false;
+                    }
+                },
+                onPasswordChange = function () {
+                    if (inputPassword.value == ""){
+                        submitButton.disabled = true;
+                    }
+                    else{
+                        submitButton.disabled = false;
+                    }
+                },
+                onRepeatPasswordChange = function () {
+                    if (inputRepeatPassword.value == "")
+                        submitButton.disabled = true;
+                    else
+                        submitButton.disabled = false;
+                },
+                submit = function () {
+                    var pseudo = inputPseudo.value
+                    var password = inputPassword.value
+                    var repeatPassword = inputRepeatPassword.value
+
+                    if (pseudo == "") {
+                        errorSpanPseudo.innerHTML = "Pseudo is empty";
+                        return;
+                    }
+                    else
+                        errorSpanPseudo.innerHTML = "";
+                    if (password == "") {
+                        errorSpanPassword.innerHTML = "Password is empty"
+                        return;
+                    }
+                    else
+                        errorSpanPassword.innerHTML = ""
+                    if (repeatPassword == "") {
+                        errorSpanRepeatPassword.innerHTML = "Password confirmation is empty"
+                        return;
+                    }
+                    else
+                        errorSpanPassword.innerHTML = ""
+
+                    if (password != repeatPassword) {
+                        errorSpanRepeatPassword.innerHTML = "Password and password confirmation are not equals"
+                        return;
+                    }
+                    else
+                        errorSpanPassword.innerHTML = ""
+                    var encryptedPassword = CryptoJS.MD5(password);
+                    var data = {
+                        "pseudo": pseudo,
+                        "password": password /*encryptedPassword*/
+                    }
+                    socket.emit('register', data);
+                    inputPassword.value = "";
+                    inputRepeatPassword.value="";
+                };
+        displayMessages = function (messages) {
+            players.innerHTML = ""
+            var i;
+            for (i = 0; i < messages.length; i++) {
+                message = messages[i];
+                message.date = new Date(message.date);
+                var element = document.createElement("p");
+                var date = new Date();
+                element.innerHTML = "[" + message.date.toLocaleTimeString() + "] " + message.pseudo + " : " + message.password;
+                players.appendChild(element);
+            }
+        };
+
+        window.onload = function () {
+
+            errorSpanPseudo = document.getElementById('errorSpanPseudo');
+            errorSpanPassword = document.getElementById('errorSpanPassword');
+            errorSpanRepeatPassword = document.getElementById('errorSpanRepeatPassword');
+            inputPseudo = document.getElementById("pseudo");
+            inputPassword = document.getElementById("password");
+            inputRepeatPassword = document.getElementById('repeatPassword');
+            submitButton = document.getElementById("submit");
+            players = document.getElementById("players")
+
+            inputPseudo.addEventListener("change", onPseudoChange, false);
+            inputPassword.addEventListener("change", onPasswordChange, false);
+            inputRepeatPassword.addEventListener("change", onRepeatPasswordChange, false);
+
+            this.addEventListener("keyUp", function (e) {
+                if (e.keyCode === 13)
+                    submit();
+
+                return false
+            }, false)
+
+            submitButton.addEventListener("click", function () {
+                //submit();
+                return false;
+            }, false)
+
+           /* socket = io.connect('http://127.0.0.1:4444');
+            socket.on('players', function (data) {
+                displayMessages(data);
+
+            }); */
+        }
+
+    </script>
+</head>
+<body class="metrouicss" style="margin-top: 50px; background-color: #000000;">
+<div style="margin-left: auto; margin-right: auto; margin-top: -25px; width: 800px;  margin-bottom:50px; text-align: center;">
+    <h2 style="color: #ffffff;">Better than WOW, better than LOL, better than any other game: </h2><h1 style="color: #ffffff;">FROGGER</h1><h2 style="color: #ffffff;"> is now available in 2013 !!!</h2>
+</div>
+<div style="margin-left: auto; margin-right: auto; width: 800px;">
+<!--<div class="page snapped bg-color-blue"> -->
+    <div class="page bg-color-blue" style="float :left; width: auto; padding-left: 20px;">
+        <div class="page-header">
+            <div class="page-header-content">
+                Registration
+            </div>
+        </div>
+
+        <div class="page-region">
+            <div class="page-region-content">
+                <form action="/user/create" name="registration" method="post">
+                    Pseudo :
+                    <div class="input-control text">
+                        <input required="required" type="text" id="pseudo" name="pseudo" style="width:300px;" placeholder="Enter a pseudo"/>
+                       <!-- <button class="btn-clear" style="float:left"></button>-->
+                        <span id="errorSpanPseudo"></span>
+                    </div>
+                    Password :
+                    <div class="input-control password">
+                        <input required="required" id="password" type="password" name="password" style="width:300px" placeholder="Enter a password"/>
+                        <span id="errorSpanPassword"></span>
+                    </div>
+
+                    Repeat Password :
+                    <div class="input-control password">
+                        <input required="required" id="repeatPassword" type="password" name="repeatPassword" style="width:300px" placeholder="Repeat password"/>
+                        <span id="errorSpanRepeatPassword"></span>
+                    </div>
+                    <input id="submit" type="submit" value="Envoyer" style="float: right; margin-right: 32px;"/>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<!--</div>-->
+<!--<div class="page fill bg-color-green" style="padding-left: 20px; max-width: 400px; min-height: 352px; float: left;">-->
+    <div class="page bg-color-green" style="float: left; width: auto; padding-left: 20px; height:332px;">
+        <div class="page-header">
+            <div class="page-header-content">
+                Login
+            </div>
+        </div>
+
+        <div class="page-region">
+            <div class="page-region-content">
+                <form action="/user/login" name="login" method="post">
+                    Pseudo :
+                    <div class="input-control text">
+                        <input required="required" type="text" id="pseudo" name="pseudo" style="width:300px" placeholder="Enter a pseudo"/>
+                        <!-- <button class="btn-clear" style="float:left"></button>-->
+                        <span id="errorSpanPseudo"></span>
+                    </div>
+                    Password :
+                    <div class="input-control password">
+                        <input required="required" id="password" type="password" name="password" style="width:300px" placeholder="Enter a password"/>
+                        <span id="errorSpanPassword"></span>
+                    </div>
+                    <input id="submit" type="submit" value="Envoyer" style="float: right; margin-right: 32px; margin-top: 60px;"/>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!--</div>-->
+</body>
+</html>
